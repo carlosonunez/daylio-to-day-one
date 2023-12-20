@@ -165,8 +165,8 @@ func TestCreateTimestamps(t *testing.T) {
 		Time:     "08:00",
 	}
 	want := dayOneTimestamps{
-		Created:  mustGetZuluTime("2023-12-17T08:00Z"),
-		Modified: mustGetZuluTime("2023-12-20T12:13Z"),
+		Created:  DayOneDateTime(mustGetZuluTime("2023-12-17T08:00Z")),
+		Modified: DayOneDateTime(mustGetZuluTime("2023-12-20T12:13Z")),
 	}
 	g := mockTimestamper{}
 	got, err := createTimestamps(&entry, &g)

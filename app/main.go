@@ -12,8 +12,8 @@ import (
 )
 
 type dayOneTimestamps struct {
-	Created  time.Time
-	Modified time.Time
+	Created  DayOneDateTime
+	Modified DayOneDateTime
 }
 
 func convertToDayOne(entry *DaylioEntry, gList *dayOneGenerators) (*DayOneEntry, error) {
@@ -47,10 +47,16 @@ func convertToDayOneExport(inCSV string, generators dayOneGenerators) (*DayOneEx
 		if err != nil {
 			return nil, err
 		}
+		ts, err := createTimestamps(&daylioEntry, generators.Timestamper)
+		if err != nil {
+			return nil, err
+		}
 		dayOneEntry.RichText = rt
 		dayOneEntry.UUID = id
 		dayOneEntry.Tags = tags
 		dayOneEntry.Location = loc
+		dayOneEntry.CreationDate = ts.Created
+		dayOneEntry.ModifiedDate = ts.Modified
 		out.Entries = append(out.Entries, *dayOneEntry)
 	}
 	return &out, nil
@@ -152,7 +158,7 @@ func createTimestamps(entry *DaylioEntry, g DayOneEntryModifiedTimestamper) (day
 		return dayOneTimestamps{}, err
 	}
 	return dayOneTimestamps{
-		Created:  created,
-		Modified: modified,
+		Created:  DayOneDateTime(created),
+		Modified: DayOneDateTime(modified),
 	}, nil
 }
