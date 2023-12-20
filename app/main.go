@@ -5,12 +5,55 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"time"
 
+	csv "github.com/gocarina/gocsv"
 	log "github.com/sirupsen/logrus"
 )
 
+type dayOneTimestamps struct {
+	Created  time.Time
+	Modified time.Time
+}
+
 func convertToDayOne(entry *DaylioEntry, gList *dayOneGenerators) (*DayOneEntry, error) {
 	return nil, nil
+}
+
+func convertToDayOneExport(inCSV string, generators dayOneGenerators) (*DayOneExport, error) {
+	var entries []DaylioEntry
+	if err := csv.UnmarshalString(inCSV, &entries); err != nil {
+		return nil, err
+	}
+	out := DayOneExport{
+		Metadata: DayOneMetadata{
+			Version: "1.0",
+		},
+		Entries: []DayOneEntry{},
+	}
+	for idx := 0; idx < len(entries); idx++ {
+		daylioEntry := entries[idx]
+		dayOneEntry := NewEmptyDayOneEntry()
+		id := generators.IDGenerator.CreateID(&daylioEntry)
+		rt, err := generateDayOneRichText(&daylioEntry, generators.UUIDGenerator)
+		if err != nil {
+			return nil, err
+		}
+		tags, err := generateTagsFromDaylioActivities(&daylioEntry)
+		if err != nil {
+			return nil, err
+		}
+		loc, err := generateLocationFromDaylioActivities(&daylioEntry)
+		if err != nil {
+			return nil, err
+		}
+		dayOneEntry.RichText = rt
+		dayOneEntry.UUID = id
+		dayOneEntry.Tags = tags
+		dayOneEntry.Location = loc
+		out.Entries = append(out.Entries, *dayOneEntry)
+	}
+	return &out, nil
 }
 
 func createRichTextNote(entry *DaylioEntry) string {
@@ -96,4 +139,20 @@ func generateAloneTimeScore(s string) string {
 		return ""
 	}
 	return fmt.Sprintf("alone score: %d", score)
+}
+
+func createTimestamps(entry *DaylioEntry, g DayOneEntryModifiedTimestamper) (dayOneTimestamps, error) {
+	createdRaw := fmt.Sprintf("%sT%sZ", entry.FullDate, entry.Time)
+	created, err := time.Parse("2006-01-02T15:04Z", createdRaw)
+	if err != nil {
+		return dayOneTimestamps{}, err
+	}
+	modified, err := g.CreateModifiedTime(entry)
+	if err != nil {
+		return dayOneTimestamps{}, err
+	}
+	return dayOneTimestamps{
+		Created:  created,
+		Modified: modified,
+	}, nil
 }

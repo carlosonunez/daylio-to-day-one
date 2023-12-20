@@ -1,0 +1,18 @@
+{
+  "location": {
+    "region": {
+      "center": {
+        "longitude": -10.0,
+        "latitude": 10.0
+      },
+      "radius": 75
+    },
+    "localityName": "City",
+    "country": "Country",
+    "timeZoneName": "America\/Chicago",
+    "administrativeArea": "NO",
+    "longitude": -10.0,
+    "placeName": "Address",
+    "latitude": 10.0
+  }
+}

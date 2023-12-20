@@ -2,11 +2,19 @@ package exporter
 
 import (
 	"encoding/json"
+	"os"
 	"strings"
 	"time"
 
 	"github.com/google/uuid"
 )
+
+// DayOneExport represents an export of a Day One journal (with entries) sans
+// audio and video attachments.
+type DayOneExport struct {
+	Metadata DayOneMetadata `json:"metadata"`
+	Entries  []DayOneEntry
+}
 
 // DayOneEntry is a representation of a journal entry.
 type DayOneEntry struct {
@@ -21,13 +29,28 @@ type DayOneEntry struct {
 	Duration            int                 `json:"duration"`
 	CreationDeviceModel string              `json:"creationDeviceModel"`
 	// UUID is not a real UUID.
-	UUID           string         `json:"uuid"`
-	IsAllDay       bool           `json:"isAllDay"`
-	ModifiedDate   DayOneDateTime `json:"modifiedDate"`
-	RichText       string         `json:"richText"`
-	Text           string         `json:"text"`
-	IsPinned       bool           `json:"isPinned"`
-	CreationDevice string         `json:"creationDevice"`
+	UUID           string                 `json:"uuid"`
+	IsAllDay       bool                   `json:"isAllDay"`
+	Weather        map[string]interface{} `json:"weather"`
+	ModifiedDate   DayOneDateTime         `json:"modifiedDate"`
+	RichText       string                 `json:"richText"`
+	Text           string                 `json:"text"`
+	IsPinned       bool                   `json:"isPinned"`
+	CreationDevice string                 `json:"creationDevice"`
+}
+
+func NewEmptyDayOneEntry() *DayOneEntry {
+	return &DayOneEntry{
+		Starred:            false,
+		CreationDeviceType: "Laptop",
+		CreationOSName:     "macOS",
+		CreationOSVersion:  "14.1.2",
+		TimeZone:           os.Getenv("TZ"),
+		IsAllDay:           false,
+		Weather:            map[string]interface{}{},
+		IsPinned:           false,
+		CreationDevice:     "MacBook",
+	}
 }
 
 type DayOneRichTextObjectData struct {
@@ -105,13 +128,6 @@ func (d DayOneDateTime) MarshalJSON() ([]byte, error) {
 
 func (d DayOneDateTime) Format(s string) string {
 	return time.Time(d).Format(s)
-}
-
-// DayOneExport represents an export of a Day One journal (with entries) sans
-// audio and video attachments.
-type DayOneExport struct {
-	Metadata DayOneMetadata `json:"metadata"`
-	Entries  []DayOneEntry
 }
 
 // DayOneMetadata defines the version of the journal export.

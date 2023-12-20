@@ -58,6 +58,14 @@ func (g *mockTimestamper) CreateModifiedTime(entry *DaylioEntry) (time.Time, err
 	return time.Parse("2006-01-02T15:04Z", "2023-12-20T12:13Z")
 }
 
+func mustGetZuluTime(s string) time.Time {
+	t, err := time.Parse("2006-01-02T15:04Z", s)
+	if err != nil {
+		panic(err)
+	}
+	return t
+}
+
 func getMockDayOneExport(t *testing.T) *DayOneExport {
 	var export DayOneExport
 	wantJSON, err := os.ReadFile("./fixtures/dayone.json")
@@ -147,6 +155,44 @@ func TestGenerateLocationQuirkDisabled(t *testing.T) {
 		Activities: "activity 1 | home | activity 2",
 	}
 	got, err := generateLocationFromDaylioActivities(&entry)
+	assert.NoError(t, err)
+	assert.Equal(t, want, got)
+}
+
+func TestCreateTimestamps(t *testing.T) {
+	entry := DaylioEntry{
+		FullDate: "2023-12-17",
+		Time:     "08:00",
+	}
+	want := dayOneTimestamps{
+		Created:  mustGetZuluTime("2023-12-17T08:00Z"),
+		Modified: mustGetZuluTime("2023-12-20T12:13Z"),
+	}
+	g := mockTimestamper{}
+	got, err := createTimestamps(&entry, &g)
+	assert.NoError(t, err)
+	assert.Equal(t, want, got)
+}
+
+func TestConvertToDayOneSingle(t *testing.T) {
+	t.Skip()
+	var export DayOneExport
+	wantJSON, err := os.ReadFile("./fixtures/dayone.json")
+	require.NoError(t, err)
+	err = json.Unmarshal(wantJSON, &export)
+	require.NoError(t, err)
+	want := export.Entries[0]
+	gGen := mockUUIDGenerator{}
+	iGen := mockIDGenerator{}
+	tGen := mockTimestamper{}
+	generators := dayOneGenerators{
+		UUIDGenerator: &gGen,
+		IDGenerator:   &iGen,
+		Timestamper:   &tGen,
+	}
+	csv := `full_date,date,weekday,time,mood,activities,note_title,note
+2023-12-17,Dec 17,Sunday,08:00,good,activity 1 | activity 2 | activity 3,note title,note text 1`
+	got, err := convertToDayOneExport(csv, generators)
 	assert.NoError(t, err)
 	assert.Equal(t, want, got)
 }
