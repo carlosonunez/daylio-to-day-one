@@ -1,0 +1,4 @@
+full_date,date,weekday,time,mood,activities,note_title,note
+2023-12-17,Dec 17,Sunday,08:00,good,activity 1 | activity 2 | activity 3,note title,note text 1
+2023-12-16,Dec 16,Sunday,08:00,good,activity 1 | activity 2 | activity 3,"",note text 2
+2023-12-16,Dec 16,Sunday,08:00,good,activity 1,"",note text 3
