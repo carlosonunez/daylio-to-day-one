@@ -41,15 +41,16 @@ type DayOneEntry struct {
 
 func NewEmptyDayOneEntry() *DayOneEntry {
 	return &DayOneEntry{
-		Starred:            false,
-		CreationDeviceType: "Laptop",
-		CreationOSName:     "macOS",
-		CreationOSVersion:  "14.1.2",
-		TimeZone:           os.Getenv("TZ"),
-		IsAllDay:           false,
-		Weather:            map[string]interface{}{},
-		IsPinned:           false,
-		CreationDevice:     "MacBook",
+		Starred:             false,
+		CreationDeviceType:  "Laptop",
+		CreationOSName:      "macOS",
+		CreationOSVersion:   "14.1.2",
+		CreationDeviceModel: "Mac14,2",
+		TimeZone:            os.Getenv("TZ"),
+		IsAllDay:            false,
+		Weather:             map[string]interface{}{},
+		IsPinned:            false,
+		CreationDevice:      "MacBook",
 	}
 }
 
@@ -59,10 +60,14 @@ type DayOneRichTextObjectData struct {
 }
 
 type DayOneRichTextObjectDataMetadata struct {
-	Version           int  `json:"version"`
-	SmallLinesRemoved bool `json:"small-lines-removed"`
-	// TODO: Create an object for this if we ever care about it.
-	Created map[string]interface{} `json:"created"`
+	Version           int                                   `json:"version"`
+	SmallLinesRemoved bool                                  `json:"small-lines-removed"`
+	Created           DayOneRichTextObjectCreatedProperties `json:"created"`
+}
+
+type DayOneRichTextObjectCreatedProperties struct {
+	Platform string
+	Version  int
 }
 
 type DayOneRichTextObject struct {

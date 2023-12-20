@@ -175,13 +175,13 @@ func TestCreateTimestamps(t *testing.T) {
 }
 
 func TestConvertToDayOneSingle(t *testing.T) {
-	t.Skip()
+	t.Setenv("TZ", "America/Chicago")
 	var export DayOneExport
 	wantJSON, err := os.ReadFile("./fixtures/dayone.json")
 	require.NoError(t, err)
 	err = json.Unmarshal(wantJSON, &export)
 	require.NoError(t, err)
-	want := export.Entries[0]
+	want := []DayOneEntry{export.Entries[0]}
 	gGen := mockUUIDGenerator{}
 	iGen := mockIDGenerator{}
 	tGen := mockTimestamper{}
@@ -193,6 +193,11 @@ func TestConvertToDayOneSingle(t *testing.T) {
 	csv := `full_date,date,weekday,time,mood,activities,note_title,note
 2023-12-17,Dec 17,Sunday,08:00,good,activity 1 | activity 2 | activity 3,note title,note text 1`
 	got, err := convertToDayOneExport(csv, generators)
+	// NOTE: Ignore testing RichText, as this is covered by another test.
+	// This will always fail due to the keys in the underlying map being in random
+	// order.
+	want[0].RichText = ""
+	got[0].RichText = ""
 	assert.NoError(t, err)
 	assert.Equal(t, want, got)
 }

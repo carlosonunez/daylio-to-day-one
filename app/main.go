@@ -20,17 +20,12 @@ func convertToDayOne(entry *DaylioEntry, gList *dayOneGenerators) (*DayOneEntry,
 	return nil, nil
 }
 
-func convertToDayOneExport(inCSV string, generators dayOneGenerators) (*DayOneExport, error) {
+func convertToDayOneExport(inCSV string, generators dayOneGenerators) ([]DayOneEntry, error) {
 	var entries []DaylioEntry
 	if err := csv.UnmarshalString(inCSV, &entries); err != nil {
 		return nil, err
 	}
-	out := DayOneExport{
-		Metadata: DayOneMetadata{
-			Version: "1.0",
-		},
-		Entries: []DayOneEntry{},
-	}
+	outs := []DayOneEntry{}
 	for idx := 0; idx < len(entries); idx++ {
 		daylioEntry := entries[idx]
 		dayOneEntry := NewEmptyDayOneEntry()
@@ -57,12 +52,13 @@ func convertToDayOneExport(inCSV string, generators dayOneGenerators) (*DayOneEx
 		dayOneEntry.Location = loc
 		dayOneEntry.CreationDate = ts.Created
 		dayOneEntry.ModifiedDate = ts.Modified
-		out.Entries = append(out.Entries, *dayOneEntry)
+		dayOneEntry.Text = createDayOneText(&daylioEntry)
+		outs = append(outs, *dayOneEntry)
 	}
-	return &out, nil
+	return outs, nil
 }
 
-func createRichTextNote(entry *DaylioEntry) string {
+func createDayOneText(entry *DaylioEntry) string {
 	noteParts := make([]string, 2)
 	if entry.NoteTitle != "" {
 		noteParts[0] = entry.NoteTitle
@@ -80,11 +76,16 @@ func generateDayOneRichText(entry *DaylioEntry, gen DayOneEntryUUIDGenerator) (s
 	}
 	rt := DayOneRichTextObjectData{
 		Meta: DayOneRichTextObjectDataMetadata{
-			Version: 1,
+			Version:           1,
+			SmallLinesRemoved: false,
+			Created: DayOneRichTextObjectCreatedProperties{
+				Version:  1527,
+				Platform: "com.bloombuilt.dayone-mac",
+			},
 		},
 		Contents: []DayOneRichTextObject{
 			DayOneRichTextObject{
-				Text: createRichTextNote(entry),
+				Text: createDayOneText(entry),
 				Attributes: DayOneRichTextObjectAttributes{
 					Line: DayOneRichTextLineObject{
 						Header:     1,
