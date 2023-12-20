@@ -90,6 +90,67 @@ func TestGenerateDayOneRichTextWithoutTitle(t *testing.T) {
 	assert.Contains(t, got, fmt.Sprintf(`"text":"Note\n\n%s"`, entry.Note))
 }
 
+func TestGenerateTagsNoQuirks(t *testing.T) {
+	entry := DaylioEntry{
+		Activities: "activity 1 | activity 2 | activity 3",
+	}
+	want := []string{"activity 1", "activity 2", "activity 3"}
+	got, err := generateTagsFromDaylioActivities(&entry)
+	assert.NoError(t, err)
+	assert.Equal(t, want, got)
+}
+
+func TestGenerateTagsAloneTimeQuirk(t *testing.T) {
+	entry := DaylioEntry{
+		Activities: "No | A Little Bit | Yes!",
+	}
+	want := []string{
+		"alone score: 0",
+		"alone score: 1",
+		"alone score: 2",
+	}
+	got, err := generateTagsFromDaylioActivities(&entry)
+	assert.NoError(t, err)
+	assert.Equal(t, want, got)
+}
+
+func TestGenerateTagsAloneTimeQuirkWhenDisabled(t *testing.T) {
+	t.Setenv("NO_ALONE_TIME_SCORING", "anything")
+	entry := DaylioEntry{
+		Activities: "No | A Little Bit | Yes!",
+	}
+	want := []string{"No", "A Little Bit", "Yes!"}
+	got, err := generateTagsFromDaylioActivities(&entry)
+	assert.NoError(t, err)
+	assert.Equal(t, want, got)
+}
+
+func TestGenerateLocationQuirk(t *testing.T) {
+	locJSON, err := os.ReadFile("./fixtures/home_location.json")
+	require.NoError(t, err)
+	t.Setenv("HOME_ADDRESS_JSON", string(locJSON))
+	var want DayOneEntryLocation
+	err = json.Unmarshal(locJSON, &want)
+	require.NoError(t, err)
+	entry := DaylioEntry{
+		Activities: "activity 1 | home | activity 2",
+	}
+	got, err := generateLocationFromDaylioActivities(&entry)
+	assert.NoError(t, err)
+	assert.Equal(t, want, got)
+}
+
+func TestGenerateLocationQuirkDisabled(t *testing.T) {
+	t.Setenv("NO_AUTO_HOME_LOCATION", "anything")
+	var want DayOneEntryLocation
+	entry := DaylioEntry{
+		Activities: "activity 1 | home | activity 2",
+	}
+	got, err := generateLocationFromDaylioActivities(&entry)
+	assert.NoError(t, err)
+	assert.Equal(t, want, got)
+}
+
 func TestConvertToDayOneEntryComplete(t *testing.T) {
 	t.Skip() // TODO: Remove the skip
 	var export DayOneExport

@@ -63,9 +63,9 @@ type DayOneEntryLocation struct {
 	Country            string                     `json:"country"`
 	TimeZoneName       string                     `json:"timeZoneName"`
 	AdministrativeArea string                     `json:"administrativeArea"`
-	Longitude          int64                      `json:"longitude"`
+	Longitude          float32                    `json:"longitude"`
 	PlaceName          string                     `json:"placeName"`
-	Latitude           int64                      `json:"latitude"`
+	Latitude           float32                    `json:"latitude"`
 }
 
 // DayOneEntryLocationDetails gives you coordinates and stuff.
@@ -82,8 +82,8 @@ type DayOneEntryLocationRegion struct {
 // DayOneEntryLocationCoords are approx. coordinates for a Day One entry
 // location.
 type DayOneEntryLocationCoords struct {
-	Longitude int64 `json:"longitude"`
-	Latitude  int64 `json:"latitude"`
+	Longitude float32 `json:"longitude"`
+	Latitude  float32 `json:"latitude"`
 }
 
 // DayOneDateTime is needed to work with Daylio's non-standard time format.
