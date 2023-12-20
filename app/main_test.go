@@ -79,6 +79,17 @@ func TestGenerateDayOneRichText(t *testing.T) {
 	assert.Contains(t, got, fmt.Sprintf(`"text":"%s\n\n%s"`, entry.NoteTitle, entry.Note))
 }
 
+func TestGenerateDayOneRichTextWithoutTitle(t *testing.T) {
+	entry := DaylioEntry{
+		Note: "note text 1",
+	}
+	uGen := mockUUIDGenerator{}
+	got, err := generateDayOneRichText(&entry, &uGen)
+	assert.NoError(t, err)
+	assert.Contains(t, got, fmt.Sprintf(`"identifier":"%s"`, strings.ToLower(FirstMockNoteUUID)))
+	assert.Contains(t, got, fmt.Sprintf(`"text":"Note\n\n%s"`, entry.Note))
+}
+
 func TestConvertToDayOneEntryComplete(t *testing.T) {
 	t.Skip() // TODO: Remove the skip
 	var export DayOneExport
