@@ -8,39 +8,6 @@ import (
 	"github.com/google/uuid"
 )
 
-// DayOneDateTime is needed to work with Daylio's non-standard time format.
-type DayOneDateTime time.Time
-
-func (d *DayOneDateTime) UnmarshalJSON(b []byte) error {
-	s := strings.Trim(string(b), "\"")
-	t, err := time.Parse("2006-01-02T15:04Z", s)
-	if err != nil {
-		return err
-	}
-	*d = DayOneDateTime(t)
-	return nil
-}
-
-func (d DayOneDateTime) MarshalJSON() ([]byte, error) {
-	return json.Marshal(time.Time(d))
-}
-
-func (d DayOneDateTime) Format(s string) string {
-	return time.Time(d).Format(s)
-}
-
-// DayOneExport represents an export of a Day One journal (with entries) sans
-// audio and video attachments.
-type DayOneExport struct {
-	Metadata DayOneMetadata `json:"metadata"`
-	Entries  []DayOneEntry
-}
-
-// DayOneMetadata defines the version of the journal export.
-type DayOneMetadata struct {
-	Version string
-}
-
 // DayOneEntry is a representation of a journal entry.
 type DayOneEntry struct {
 	Starred             bool                `json:"starred"`
@@ -117,4 +84,37 @@ type DayOneEntryLocationRegion struct {
 type DayOneEntryLocationCoords struct {
 	Longitude int64 `json:"longitude"`
 	Latitude  int64 `json:"latitude"`
+}
+
+// DayOneDateTime is needed to work with Daylio's non-standard time format.
+type DayOneDateTime time.Time
+
+func (d *DayOneDateTime) UnmarshalJSON(b []byte) error {
+	s := strings.Trim(string(b), "\"")
+	t, err := time.Parse("2006-01-02T15:04Z", s)
+	if err != nil {
+		return err
+	}
+	*d = DayOneDateTime(t)
+	return nil
+}
+
+func (d DayOneDateTime) MarshalJSON() ([]byte, error) {
+	return json.Marshal(time.Time(d))
+}
+
+func (d DayOneDateTime) Format(s string) string {
+	return time.Time(d).Format(s)
+}
+
+// DayOneExport represents an export of a Day One journal (with entries) sans
+// audio and video attachments.
+type DayOneExport struct {
+	Metadata DayOneMetadata `json:"metadata"`
+	Entries  []DayOneEntry
+}
+
+// DayOneMetadata defines the version of the journal export.
+type DayOneMetadata struct {
+	Version string
 }
