@@ -48,17 +48,8 @@ func ConvertToDayOneExport(daylioCSVPath string, generators types.DayOneGenerato
 	}
 	var exports []*types.DayOneExport
 	for idx := 0; idx < len(entries); idx++ {
-		var start, end int
-		if len(entries) <= DAY_ONE_MAX_ENTRIES_IN_SINGLE_EXPORT {
-			start = idx
-			end = len(entries) - 1
-		} else {
-			start = idx
-			end = idx + DAY_ONE_MAX_ENTRIES_IN_SINGLE_EXPORT
-			if end > len(entries) {
-				end = len(entries)
-			}
-		}
+		start := idx
+		end := numEntriesInThisPage(entries, idx)
 		entries_text := "Daylio Entries"
 		if idx > 0 {
 			entries_text = "more Daylio Entries"
@@ -73,6 +64,17 @@ func ConvertToDayOneExport(daylioCSVPath string, generators types.DayOneGenerato
 		idx = end
 	}
 	return exports, nil
+}
+
+func numEntriesInThisPage(entries []types.DaylioEntry, idx int) int {
+	if len(entries) <= DAY_ONE_MAX_ENTRIES_IN_SINGLE_EXPORT {
+		return len(entries) - 1
+	}
+	numEntries := idx + DAY_ONE_MAX_ENTRIES_IN_SINGLE_EXPORT
+	if numEntries > len(entries) {
+		numEntries = len(entries)
+	}
+	return numEntries
 }
 
 func convertToDayOneEntries(entries []types.DaylioEntry, generators types.DayOneGenerators) ([]types.DayOneEntry, error) {
