@@ -1,4 +1,4 @@
-package exporter
+package types
 
 import (
 	"encoding/json"
@@ -37,21 +37,6 @@ type DayOneEntry struct {
 	Text           string                 `json:"text"`
 	IsPinned       bool                   `json:"isPinned"`
 	CreationDevice string                 `json:"creationDevice"`
-}
-
-func NewEmptyDayOneEntry() *DayOneEntry {
-	return &DayOneEntry{
-		Starred:             false,
-		CreationDeviceType:  "Laptop",
-		CreationOSName:      "macOS",
-		CreationOSVersion:   "14.1.2",
-		CreationDeviceModel: "Mac14,2",
-		TimeZone:            os.Getenv("TZ"),
-		IsAllDay:            false,
-		Weather:             map[string]interface{}{},
-		IsPinned:            false,
-		CreationDevice:      "MacBook",
-	}
 }
 
 type DayOneRichTextObjectData struct {
@@ -128,7 +113,7 @@ func (d *DayOneDateTime) UnmarshalJSON(b []byte) error {
 }
 
 func (d DayOneDateTime) MarshalJSON() ([]byte, error) {
-	return json.Marshal(time.Time(d))
+	return json.Marshal(d.Format("2006-01-02T15:04Z"))
 }
 
 func (d DayOneDateTime) Format(s string) string {
@@ -138,4 +123,28 @@ func (d DayOneDateTime) Format(s string) string {
 // DayOneMetadata defines the version of the journal export.
 type DayOneMetadata struct {
 	Version string
+}
+
+// NewEmptyDayOneEntry generates an empty DayOne entry that looks like it was
+// created from a MacBook using the Day One macOS app.
+func NewEmptyDayOneEntry() *DayOneEntry {
+	return &DayOneEntry{
+		Starred:             false,
+		CreationDeviceType:  "Laptop",
+		CreationOSName:      "macOS",
+		CreationOSVersion:   "14.1.2",
+		CreationDeviceModel: "Mac14,2",
+		TimeZone:            os.Getenv("TZ"),
+		IsAllDay:            false,
+		Weather:             map[string]interface{}{},
+		IsPinned:            false,
+		CreationDevice:      "MacBook"}
+}
+
+// NewDayOneExport generates a v1.0 DayOne export.
+func NewDayOneExport(entries []DayOneEntry) *DayOneExport {
+	return &DayOneExport{
+		Metadata: DayOneMetadata{Version: "1.0"},
+		Entries:  entries,
+	}
 }

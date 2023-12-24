@@ -1,13 +1,16 @@
 package exporter
 
 import (
+	"bytes"
 	"encoding/json"
+	"exporter/types"
 	"fmt"
 	"os"
 	"strings"
 	"testing"
 	"time"
 
+	csv "github.com/gocarina/gocsv"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -24,7 +27,7 @@ const (
 
 type mockUUIDGenerator struct{}
 
-func (g *mockUUIDGenerator) GenerateUUID(entry *DaylioEntry) (uuid.UUID, error) {
+func (g *mockUUIDGenerator) GenerateUUID(entry *types.DaylioEntry) (uuid.UUID, error) {
 	switch entry.Note {
 	case "note text 1":
 		return uuid.Parse(FirstMockNoteUUID)
@@ -39,7 +42,7 @@ func (g *mockUUIDGenerator) GenerateUUID(entry *DaylioEntry) (uuid.UUID, error) 
 
 type mockIDGenerator struct{}
 
-func (g *mockIDGenerator) CreateID(entry *DaylioEntry) string {
+func (g *mockIDGenerator) CreateID(entry *types.DaylioEntry) string {
 	switch entry.Note {
 	case "note text 1":
 		return FirstMockNoteID
@@ -54,7 +57,7 @@ func (g *mockIDGenerator) CreateID(entry *DaylioEntry) string {
 
 type mockTimestamper struct{}
 
-func (g *mockTimestamper) CreateModifiedTime(entry *DaylioEntry) (time.Time, error) {
+func (g *mockTimestamper) CreateModifiedTime(entry *types.DaylioEntry) (time.Time, error) {
 	return time.Parse("2006-01-02T15:04Z", "2023-12-20T12:13Z")
 }
 
@@ -66,17 +69,8 @@ func mustGetZuluTime(s string) time.Time {
 	return t
 }
 
-func getMockDayOneExport(t *testing.T) *DayOneExport {
-	var export DayOneExport
-	wantJSON, err := os.ReadFile("./fixtures/dayone.json")
-	require.NoError(t, err)
-	err = json.Unmarshal(wantJSON, &export)
-	require.NoError(t, err)
-	return &export
-}
-
 func TestGenerateDayOneRichText(t *testing.T) {
-	entry := DaylioEntry{
+	entry := types.DaylioEntry{
 		NoteTitle: "Title",
 		Note:      "note text 1",
 	}
@@ -88,7 +82,7 @@ func TestGenerateDayOneRichText(t *testing.T) {
 }
 
 func TestGenerateDayOneRichTextWithoutTitle(t *testing.T) {
-	entry := DaylioEntry{
+	entry := types.DaylioEntry{
 		Note: "note text 1",
 	}
 	uGen := mockUUIDGenerator{}
@@ -99,7 +93,7 @@ func TestGenerateDayOneRichTextWithoutTitle(t *testing.T) {
 }
 
 func TestGenerateTagsNoQuirks(t *testing.T) {
-	entry := DaylioEntry{
+	entry := types.DaylioEntry{
 		Activities: "activity 1 | activity 2 | activity 3",
 	}
 	want := []string{"activity 1", "activity 2", "activity 3"}
@@ -109,7 +103,7 @@ func TestGenerateTagsNoQuirks(t *testing.T) {
 }
 
 func TestGenerateTagsAloneTimeQuirk(t *testing.T) {
-	entry := DaylioEntry{
+	entry := types.DaylioEntry{
 		Activities: "No | A Little Bit | Yes!",
 	}
 	want := []string{
@@ -124,7 +118,7 @@ func TestGenerateTagsAloneTimeQuirk(t *testing.T) {
 
 func TestGenerateTagsAloneTimeQuirkWhenDisabled(t *testing.T) {
 	t.Setenv("NO_ALONE_TIME_SCORING", "anything")
-	entry := DaylioEntry{
+	entry := types.DaylioEntry{
 		Activities: "No | A Little Bit | Yes!",
 	}
 	want := []string{"No", "A Little Bit", "Yes!"}
@@ -137,10 +131,10 @@ func TestGenerateLocationQuirk(t *testing.T) {
 	locJSON, err := os.ReadFile("./fixtures/home_location.json")
 	require.NoError(t, err)
 	t.Setenv("HOME_ADDRESS_JSON", string(locJSON))
-	var want DayOneEntryLocation
+	var want types.DayOneEntryLocation
 	err = json.Unmarshal(locJSON, &want)
 	require.NoError(t, err)
-	entry := DaylioEntry{
+	entry := types.DaylioEntry{
 		Activities: "activity 1 | home | activity 2",
 	}
 	got, err := generateLocationFromDaylioActivities(&entry)
@@ -150,8 +144,8 @@ func TestGenerateLocationQuirk(t *testing.T) {
 
 func TestGenerateLocationQuirkDisabled(t *testing.T) {
 	t.Setenv("NO_AUTO_HOME_LOCATION", "anything")
-	var want DayOneEntryLocation
-	entry := DaylioEntry{
+	var want types.DayOneEntryLocation
+	entry := types.DaylioEntry{
 		Activities: "activity 1 | home | activity 2",
 	}
 	got, err := generateLocationFromDaylioActivities(&entry)
@@ -160,13 +154,13 @@ func TestGenerateLocationQuirkDisabled(t *testing.T) {
 }
 
 func TestCreateTimestamps(t *testing.T) {
-	entry := DaylioEntry{
+	entry := types.DaylioEntry{
 		FullDate: "2023-12-17",
 		Time:     "08:00",
 	}
 	want := dayOneTimestamps{
-		Created:  DayOneDateTime(mustGetZuluTime("2023-12-17T08:00Z")),
-		Modified: DayOneDateTime(mustGetZuluTime("2023-12-20T12:13Z")),
+		Created:  types.DayOneDateTime(mustGetZuluTime("2023-12-17T08:00Z")),
+		Modified: types.DayOneDateTime(mustGetZuluTime("2023-12-20T12:13Z")),
 	}
 	g := mockTimestamper{}
 	got, err := createTimestamps(&entry, &g)
@@ -176,59 +170,120 @@ func TestCreateTimestamps(t *testing.T) {
 
 func TestConvertToDayOneSingle(t *testing.T) {
 	t.Setenv("TZ", "America/Chicago")
-	var export DayOneExport
+	var export types.DayOneExport
 	wantJSON, err := os.ReadFile("./fixtures/dayone.json")
 	require.NoError(t, err)
 	err = json.Unmarshal(wantJSON, &export)
 	require.NoError(t, err)
-	want := []DayOneEntry{export.Entries[0]}
+	want := []types.DayOneEntry{export.Entries[0]}
 	gGen := mockUUIDGenerator{}
 	iGen := mockIDGenerator{}
 	tGen := mockTimestamper{}
-	generators := dayOneGenerators{
+	generators := types.DayOneGenerators{
 		UUIDGenerator: &gGen,
 		IDGenerator:   &iGen,
 		Timestamper:   &tGen,
 	}
-	csv := `full_date,date,weekday,time,mood,activities,note_title,note
+	var entries []types.DaylioEntry
+	csvRaw := `full_date,date,weekday,time,mood,activities,note_title,note
 2023-12-17,Dec 17,Sunday,08:00,good,activity 1 | activity 2 | activity 3,note title,note text 1`
-	got, err := convertToDayOneExport(csv, generators)
-	// NOTE: Ignore testing RichText, as this is covered by another test.
-	// This will always fail due to the keys in the underlying map being in random
-	// order.
+	err = csv.UnmarshalString(csvRaw, &entries)
+	require.NoError(t, err)
+	got, err := convertToDayOneEntries(entries, generators)
+	// NOTE: Ignore testing RichText, as this is covered by another test.  This
+	// will always fail due to the keys in the underlying map being inserted in
+	// random order.
 	want[0].RichText = ""
 	got[0].RichText = ""
 	assert.NoError(t, err)
 	assert.Equal(t, want, got)
 }
 
-func TestConvertToDayOneEntryComplete(t *testing.T) {
-	t.Skip() // TODO: Remove the skip
-	var export DayOneExport
+func TestConvertDaylioEntriesToDayOne(t *testing.T) {
+	t.Setenv("TZ", "America/Chicago")
+	var entries []types.DaylioEntry
+	mockEntries, err := os.OpenFile("./fixtures/daylio.csv", os.O_RDWR|os.O_CREATE, os.ModePerm)
+	require.NoError(t, err)
+	defer mockEntries.Close()
+	err = csv.UnmarshalFile(mockEntries, &entries)
+	require.NoError(t, err)
+	var export types.DayOneExport
 	wantJSON, err := os.ReadFile("./fixtures/dayone.json")
 	require.NoError(t, err)
 	err = json.Unmarshal(wantJSON, &export)
 	require.NoError(t, err)
-	want := export.Entries[0]
+	want := export.Entries
 	gGen := mockUUIDGenerator{}
 	iGen := mockIDGenerator{}
 	tGen := mockTimestamper{}
-	generators := dayOneGenerators{
+	generators := types.DayOneGenerators{
 		UUIDGenerator: &gGen,
 		IDGenerator:   &iGen,
 		Timestamper:   &tGen,
 	}
-	entry := DaylioEntry{
-		FullDate:   "2023-12-17",
-		Date:       "Dec 17",
-		Weekday:    "Sunday",
-		Time:       "08:00",
-		Mood:       DaylioMoodRad,
-		Activities: "activity 1 | activity 2 | activity 3",
-		NoteTitle:  "Title",
-		Note:       "note text 1",
+	got, err := convertToDayOneEntries(entries, generators)
+	// NOTE: Ignore testing RichText, as this is covered by another test.
+	// This will always fail due to the keys in the underlying map being in random
+	// order.
+	for idx := 0; idx < len(want); idx++ {
+		want[idx].RichText = ""
 	}
-	got, err := convertToDayOne(&entry, &generators)
+	for idx := 0; idx < len(got); idx++ {
+		got[idx].RichText = ""
+	}
 	assert.NoError(t, err)
 	assert.Equal(t, want, got)
+}
+
+func TestCreateDayOneExportsSingle(t *testing.T) {
+	t.Setenv("TZ", "America/Chicago")
+	gGen := mockUUIDGenerator{}
+	iGen := mockIDGenerator{}
+	tGen := mockTimestamper{}
+	generators := types.DayOneGenerators{
+		UUIDGenerator: &gGen,
+		IDGenerator:   &iGen,
+		Timestamper:   &tGen,
+	}
+	want_num_pages := 1
+	got, err := ConvertToDayOneExport("./fixtures/daylio.csv", generators)
+	got_num_pages := len(got)
+	assert.NoError(t, err)
+	assert.Equal(t, want_num_pages, got_num_pages)
+}
+
+func TestCreateDayOneExportsPaged(t *testing.T) {
+	t.Setenv("TZ", "America/Chicago")
+	gGen := mockUUIDGenerator{}
+	iGen := mockIDGenerator{}
+	tGen := mockTimestamper{}
+	generators := types.DayOneGenerators{
+		UUIDGenerator: &gGen,
+		IDGenerator:   &iGen,
+		Timestamper:   &tGen,
+	}
+	want_num_pages := 2
+	got, err := ConvertToDayOneExport("./fixtures/daylio-large.csv", generators)
+	got_num_pages := len(got)
+	assert.NoError(t, err)
+	assert.Equal(t, want_num_pages, got_num_pages)
+}
+
+func TestWritingDayOneExportsToDisk(t *testing.T) {
+	var buf bytes.Buffer
+	want := types.DayOneExport{
+		Metadata: types.DayOneMetadata{Version: "1.0"},
+		Entries: []types.DayOneEntry{types.DayOneEntry{
+			Text: "hello",
+			Tags: []string{"tag 1", "tag 2", "tag 3"},
+		},
+		},
+	}
+	err := WriteDayOneExport(buf, &want)
+	assert.NoError(t, err)
+	var got types.DayOneExport
+	err = json.Unmarshal(buf.Bytes(), &got)
+	require.NoError(t, err)
+	assert.Equal(t, want.Metadata.Version, got.Metadata.Version)
+	assert.Equal(t, want.Entries[0].Text, got.Entries[0].Text)
 }

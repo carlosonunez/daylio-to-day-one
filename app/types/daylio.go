@@ -1,4 +1,4 @@
-package exporter
+package types
 
 const (
 	DaylioMoodRad   = "rad"
