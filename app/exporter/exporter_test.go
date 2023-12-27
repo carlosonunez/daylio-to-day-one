@@ -87,39 +87,6 @@ func TestWritingDayOneExportsToDisk(t *testing.T) {
 	assert.Equal(t, want.Metadata.Version, got.Metadata.Version)
 	assert.Equal(t, want.Entries[0].Text, got.Entries[0].Text)
 }
-func TestCreateDayOneExportsSingle(t *testing.T) {
-	t.Setenv("TZ", "America/Chicago")
-	gGen := mockUUIDGenerator{}
-	iGen := mockIDGenerator{}
-	tGen := mockTimestamper{}
-	generators := types.DayOneGenerators{
-		UUIDGenerator: &gGen,
-		IDGenerator:   &iGen,
-		Timestamper:   &tGen,
-	}
-	want_num_pages := 1
-	got, err := ConvertToDayOneExport("./fixtures/daylio.csv", generators)
-	got_num_pages := len(got)
-	assert.NoError(t, err)
-	assert.Equal(t, want_num_pages, got_num_pages)
-}
-
-func TestCreateDayOneExportsPaged(t *testing.T) {
-	t.Setenv("TZ", "America/Chicago")
-	gGen := mockUUIDGenerator{}
-	iGen := mockIDGenerator{}
-	tGen := mockTimestamper{}
-	generators := types.DayOneGenerators{
-		UUIDGenerator: &gGen,
-		IDGenerator:   &iGen,
-		Timestamper:   &tGen,
-	}
-	want_num_pages := 2
-	got, err := ConvertToDayOneExport("./fixtures/daylio-large.csv", generators)
-	got_num_pages := len(got)
-	assert.NoError(t, err)
-	assert.Equal(t, want_num_pages, got_num_pages)
-}
 
 func TestGenerateDayOneRichText(t *testing.T) {
 	entry := types.DaylioEntry{
@@ -284,19 +251,5 @@ func TestConvertDaylioEntriesToDayOne(t *testing.T) {
 		got[idx].RichText = ""
 	}
 	assert.NoError(t, err)
-	assert.Equal(t, want, got)
-}
-
-func TestExportFileNameSinglePage(t *testing.T) {
-	today := time.Unix(1703691090, 0).UTC()
-	want := "exports/export-20231227.json"
-	got := exportFileName(0, today)
-	assert.Equal(t, want, got)
-}
-
-func TestExportFileNameMultiplePage(t *testing.T) {
-	today := time.Unix(1703691090, 0).UTC()
-	want := "exports/export-20231227-2.json"
-	got := exportFileName(1, today)
 	assert.Equal(t, want, got)
 }

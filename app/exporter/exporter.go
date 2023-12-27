@@ -1,12 +1,13 @@
 package exporter
 
 import (
+	"archive/zip"
 	"encoding/json"
 	"exporter/types"
 	"fmt"
 	"io"
 	"os"
-	"path"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -47,7 +48,7 @@ func Initialize() error {
 //
 // Each Day One export file contains at most 99 entries, as this seems to be the
 // most entries Day One will process at a time.
-func ConvertToDayOneExport(daylioCSVPath string, generators types.DayOneGenerators) ([]*types.DayOneExport, error) {
+func ConvertToDayOneExport(daylioCSVPath string, generators types.DayOneGenerators) (*types.DayOneExport, error) {
 	f, err := os.OpenFile(daylioCSVPath, os.O_RDWR|os.O_CREATE, os.ModePerm)
 	if err != nil {
 		return nil, err
@@ -57,44 +58,30 @@ func ConvertToDayOneExport(daylioCSVPath string, generators types.DayOneGenerato
 	if err := csv.UnmarshalFile(f, &entries); err != nil {
 		return nil, err
 	}
-	var exports []*types.DayOneExport
-	for idx := 0; idx < len(entries); idx++ {
-		start := idx
-		end := numEntriesInThisPage(entries, idx)
-		entries_text := "Daylio Entries"
-		if idx > 0 {
-			entries_text = "more Daylio Entries"
-		}
-		log.Infof("Converting %d %s to Day One (%d remaining)", end-start, entries_text, len(entries)-end)
-		batch := entries[start:end]
-		dayOneEntries, err := convertToDayOneEntries(batch, generators)
-		if err != nil {
-			return nil, err
-		}
-		exports = append(exports, types.NewDayOneExport(dayOneEntries))
-		idx = end
+	dayOneEntries, err := convertToDayOneEntries(entries, generators)
+	if err != nil {
+		return nil, err
 	}
-	return exports, nil
+	return types.NewDayOneExport(dayOneEntries), nil
 }
 
-// WriteDayOneExports commits a list of DayOneExports to disk.
-func WriteDayOneExports(exportList []*types.DayOneExport) ([]string, error) {
-	exportFnames := []string{}
-	today := time.Now()
-	for page, export := range exportList {
-		log.Debugf("On page %d", page)
-		fname := exportFileName(page, today)
-		f, err := os.Create(fname)
-		if err != nil {
-			return []string{}, err
-		}
-		defer f.Close()
-		if err := writeDayOneExport(f, export); err != nil {
-			return []string{}, err
-		}
-		exportFnames = append(exportFnames, fname)
+// WriteDayOneExports zips a DayOne export JSON and writes it to disk.
+func WriteDayOneExports(export *types.DayOneExport, journalName string) (string, error) {
+	f, err := os.Create(exportZipFileName())
+	if err != nil {
+		return "", err
 	}
-	return exportFnames, nil
+	defer f.Close()
+	zip := zip.NewWriter(f)
+	defer zip.Close()
+	fInZip, err := zip.Create(journalName + ".zip")
+	if err != nil {
+		return "", err
+	}
+	if err := writeDayOneExport(fInZip, export); err != nil {
+		return "", err
+	}
+	return exportZipFileName(), nil
 }
 
 func writeDayOneExport(buf io.Writer, export *types.DayOneExport) error {
@@ -260,14 +247,8 @@ func exportDirectory() string {
 	return DEFAULT_EXPORT_DIRECTORY
 }
 
-func exportFileName(page int, today time.Time) string {
-	fname := fmt.Sprintf("%s-%s", BASE_FILE_NAME, today.Format("20060102"))
-	thisPage := page + 1
-	if thisPage > 1 {
-		fname = fmt.Sprintf("%s-%d", fname, thisPage)
-	}
-	fname = fname + ".json"
-	return path.Join(exportDirectory(), fname)
+func exportZipFileName() string {
+	return filepath.Join(exportDirectory(), fmt.Sprintf("export-%s.zip", time.Now().Format("20060102")))
 }
 
 func createExportDirectoryIfMissing() error {

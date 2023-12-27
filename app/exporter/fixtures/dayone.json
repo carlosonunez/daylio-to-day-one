@@ -9,7 +9,7 @@
   "creationDeviceType" : "Laptop",
   "creationOSName" : "macOS",
   "creationOSVersion" : "14.1.2",
-  "creationDate" : "2023-12-17T08:00Z",
+  "creationDate" : "2023-12-17T08:00:00Z",
   "timeZone" : "America\/Chicago",
   "tags" : [
     "activity 1",
@@ -21,7 +21,7 @@
   "uuid" : "DFFVSK3JENO8ZHKQTDLOS8AEWFS7IPS3O",
   "isAllDay" : false,
   "weather" : {},
-  "modifiedDate" : "2023-12-20T12:13Z",
+  "modifiedDate" : "2023-12-20T12:13:00Z",
   "richText" : "{\"contents\":[{\"attributes\":{\"line\":{\"header\":1,\"identifier\":\"5D73E4F9-491A-4DB4-BE24-D89CC8C52636\"}},\"text\":\"note title\\n\"},{\"text\":\"\\nnote text 1\"}],\"meta\":{\"created\":{\"platform\":\"com.bloombuilt.dayone-mac\",\"version\":1527},\"small-lines-removed\":true,\"version\":1}}",
   "text" : "note title\n\nnote text 1",
   "isPinned" : false,
@@ -33,7 +33,7 @@
   "creationDeviceType" : "Laptop",
   "creationOSName" : "macOS",
   "creationOSVersion" : "14.1.2",
-  "creationDate" : "2023-12-16T08:00Z",
+  "creationDate" : "2023-12-16T08:00:00Z",
   "timeZone" : "America\/Chicago",
   "tags" : [
     "activity 1",
@@ -45,7 +45,7 @@
   "uuid" : "CQD40MRYMUIT02FYYI2FQTU81DELADNQZ",
   "isAllDay" : false,
   "weather" : {},
-  "modifiedDate" : "2023-12-20T12:13Z",
+  "modifiedDate" : "2023-12-20T12:13:00Z",
   "richText" : "{\"contents\":[{\"attributes\":{\"line\":{\"header\":1,\"identifier\":\"D5265940-000C-465D-8FFB-602375CEA7AE\"}},\"text\":\"Note\\n\"},{\"text\":\"\\nnote text 2\"}],\"meta\":{\"created\":{\"platform\":\"com.bloombuilt.dayone-mac\",\"version\":1527},\"small-lines-removed\":true,\"version\":1}}",
   "text" : "Note\n\nnote text 2",
   "isPinned" : false,
@@ -57,7 +57,7 @@
   "creationDeviceType" : "Laptop",
   "creationOSName" : "macOS",
   "creationOSVersion" : "14.1.2",
-  "creationDate" : "2023-12-15T08:00Z",
+  "creationDate" : "2023-12-15T08:00:00Z",
   "timeZone" : "America\/Chicago",
   "tags" : [
     "activity 1"
@@ -67,7 +67,7 @@
   "uuid" : "UXQQ9CPNEYZ13DI59FPVQ5YQWXZOQBE7I",
   "isAllDay" : false,
   "weather" : {},
-  "modifiedDate" : "2023-12-20T12:13Z",
+  "modifiedDate" : "2023-12-20T12:13:00Z",
   "richText" : "{\"contents\":[{\"attributes\":{\"line\":{\"header\":1,\"identifier\":\"E25B024A-708E-4143-B1B6-4F1AD8BF76E7\"}},\"text\":\"Note\\n\"},{\"text\":\"\\nnote text 3\"}],\"meta\":{\"created\":{\"platform\":\"com.bloombuilt.dayone-mac\",\"version\":1527},\"small-lines-removed\":true,\"version\":1}}",
   "text" : "Note\n\nnote text 3",
   "isPinned" : false,
