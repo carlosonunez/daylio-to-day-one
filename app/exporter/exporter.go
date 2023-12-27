@@ -82,6 +82,7 @@ func WriteDayOneExports(exportList []*types.DayOneExport) ([]string, error) {
 	exportFnames := []string{}
 	today := time.Now()
 	for page, export := range exportList {
+		log.Debugf("On page %d", page)
 		fname := exportFileName(page, today)
 		f, err := os.Create(fname)
 		if err != nil {
