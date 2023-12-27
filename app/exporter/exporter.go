@@ -35,6 +35,7 @@ func Version() {
 // Initializes sets up an export job.
 func Initialize() error {
 	log.Info("Starting Daylio to Day One export")
+	setLogLevel()
 	if err := createExportDirectoryIfMissing(); err != nil {
 		return err
 	}
@@ -277,4 +278,15 @@ func createExportDirectoryIfMissing() error {
 		return os.Mkdir(exportDirectory(), 0755)
 	}
 	return err
+}
+
+func setLogLevel() {
+	if os.Getenv("LOG_LEVEL") == "" {
+		return
+	}
+	level, err := log.ParseLevel(os.Getenv("LOG_LEVEL"))
+	if err != nil {
+		log.Warningf("Invalid log level, using default: %s", os.Getenv("LOG_LEVEL"))
+	}
+	log.SetLevel(level)
 }
