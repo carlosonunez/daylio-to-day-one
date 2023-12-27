@@ -4,7 +4,9 @@ import (
 	"encoding/json"
 	"exporter/types"
 	"fmt"
+	"io"
 	"os"
+	"path"
 	"strings"
 	"time"
 
@@ -14,21 +16,22 @@ import (
 
 const (
 	DAY_ONE_MAX_ENTRIES_IN_SINGLE_EXPORT = 99
-	USAGE                                = `Usage: daylio-to-day-one [FILE]
-Converts a Daylio CSV export to importable Day One JSON files
-
-OPTIONS
-
-	FILE			The path to the Daylio export.
-
-NOTES
-
-- This app converts 99 Daylio entries at a time. This seems to be a Day One limitation.`
+	DEFAULT_EXPORT_DIRECTORY             = "./exports"
+	BASE_FILE_NAME                       = "export"
 )
 
 type dayOneTimestamps struct {
 	Created  types.DayOneDateTime
 	Modified types.DayOneDateTime
+}
+
+// Initializes sets up an export job.
+func Initialize() error {
+	log.Info("Starting Daylio to Day One export")
+	if err := createExportDirectoryIfMissing(); err != nil {
+		return err
+	}
+	return nil
 }
 
 // ConvertToDayOneExport converts entries within an exported CSV file from
@@ -64,6 +67,33 @@ func ConvertToDayOneExport(daylioCSVPath string, generators types.DayOneGenerato
 		idx = end
 	}
 	return exports, nil
+}
+
+// WriteDayOneExports commits a list of DayOneExports to disk.
+func WriteDayOneExports(exportList []*types.DayOneExport) ([]string, error) {
+	exportFnames := []string{}
+	for page, export := range exportList {
+		fname := exportFileName(page)
+		f, err := os.Create(fname)
+		if err != nil {
+			return []string{}, err
+		}
+		defer f.Close()
+		if err := writeDayOneExport(f, export); err != nil {
+			return []string{}, err
+		}
+		exportFnames = append(exportFnames, fname)
+	}
+	return exportFnames, nil
+}
+
+func writeDayOneExport(buf io.Writer, export *types.DayOneExport) error {
+	json, err := json.Marshal(export)
+	if err != nil {
+		return err
+	}
+	_, err = buf.Write(json)
+	return err
 }
 
 func numEntriesInThisPage(entries []types.DaylioEntry, idx int) int {
@@ -137,7 +167,7 @@ func generateDayOneRichText(entry *types.DaylioEntry, gen types.DayOneEntryUUIDG
 			},
 		},
 		Contents: []types.DayOneRichTextObject{
-			types.DayOneRichTextObject{
+			{
 				Text: createDayOneText(entry),
 				Attributes: types.DayOneRichTextObjectAttributes{
 					Line: types.DayOneRichTextLineObject{
@@ -214,4 +244,30 @@ func createTimestamps(entry *types.DaylioEntry, g types.DayOneEntryModifiedTimes
 		Created:  types.DayOneDateTime(created),
 		Modified: types.DayOneDateTime(modified),
 	}, nil
+}
+
+func exportDirectory() string {
+	return DEFAULT_EXPORT_DIRECTORY
+}
+
+func exportFileName(page int) string {
+	today := time.Now().Format("20060102")
+	fname := BASE_FILE_NAME
+	if page > 1 {
+		fname = fmt.Sprintf("%s-%s-%d", fname, today, page)
+	}
+	fname = fname + ".json"
+	return path.Join(exportDirectory(), fname)
+}
+
+func createExportDirectoryIfMissing() error {
+	_, err := os.Stat(exportDirectory())
+	if err == nil {
+		return nil
+	}
+	if exists := os.IsExist(err); !exists {
+		log.Debugf("Creating export directory: %s", exportDirectory())
+		return os.Mkdir(exportDirectory(), 0755)
+	}
+	return err
 }

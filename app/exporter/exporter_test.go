@@ -235,6 +235,24 @@ func TestConvertDaylioEntriesToDayOne(t *testing.T) {
 	assert.Equal(t, want, got)
 }
 
+func TestWritingDayOneExportsToDisk(t *testing.T) {
+	var buf bytes.Buffer
+	want := types.DayOneExport{
+		Metadata: types.DayOneMetadata{Version: "1.0"},
+		Entries: []types.DayOneEntry{{
+			Text: "hello",
+			Tags: []string{"tag 1", "tag 2", "tag 3"},
+		},
+		},
+	}
+	err := writeDayOneExport(&buf, &want)
+	assert.NoError(t, err)
+	var got types.DayOneExport
+	err = json.Unmarshal(buf.Bytes(), &got)
+	require.NoError(t, err)
+	assert.Equal(t, want.Metadata.Version, got.Metadata.Version)
+	assert.Equal(t, want.Entries[0].Text, got.Entries[0].Text)
+}
 func TestCreateDayOneExportsSingle(t *testing.T) {
 	t.Setenv("TZ", "America/Chicago")
 	gGen := mockUUIDGenerator{}
@@ -267,23 +285,4 @@ func TestCreateDayOneExportsPaged(t *testing.T) {
 	got_num_pages := len(got)
 	assert.NoError(t, err)
 	assert.Equal(t, want_num_pages, got_num_pages)
-}
-
-func TestWritingDayOneExportsToDisk(t *testing.T) {
-	var buf bytes.Buffer
-	want := types.DayOneExport{
-		Metadata: types.DayOneMetadata{Version: "1.0"},
-		Entries: []types.DayOneEntry{types.DayOneEntry{
-			Text: "hello",
-			Tags: []string{"tag 1", "tag 2", "tag 3"},
-		},
-		},
-	}
-	err := WriteDayOneExport(buf, &want)
-	assert.NoError(t, err)
-	var got types.DayOneExport
-	err = json.Unmarshal(buf.Bytes(), &got)
-	require.NoError(t, err)
-	assert.Equal(t, want.Metadata.Version, got.Metadata.Version)
-	assert.Equal(t, want.Entries[0].Text, got.Entries[0].Text)
 }
