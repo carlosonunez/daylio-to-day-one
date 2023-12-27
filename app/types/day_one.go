@@ -134,7 +134,7 @@ func NewEmptyDayOneEntry() *DayOneEntry {
 		CreationOSName:      "macOS",
 		CreationOSVersion:   "14.1.2",
 		CreationDeviceModel: "Mac14,2",
-		TimeZone:            os.Getenv("TZ"),
+		TimeZone:            thisTZ(),
 		IsAllDay:            false,
 		Weather:             map[string]interface{}{},
 		IsPinned:            false,
@@ -147,4 +147,12 @@ func NewDayOneExport(entries []DayOneEntry) *DayOneExport {
 		Metadata: DayOneMetadata{Version: "1.0"},
 		Entries:  entries,
 	}
+}
+
+func thisTZ() string {
+	if os.Getenv("TZ") != "" {
+		return os.Getenv("TZ")
+	}
+	zone, _ := time.Now().Zone()
+	return zone
 }
