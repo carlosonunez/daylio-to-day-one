@@ -58,11 +58,11 @@ func (g *mockIDGenerator) CreateID(entry *types.DaylioEntry) string {
 type mockTimestamper struct{}
 
 func (g *mockTimestamper) CreateModifiedTime(entry *types.DaylioEntry) (time.Time, error) {
-	return time.Parse("2006-01-02T15:04Z", "2023-12-20T12:13Z")
+	return time.Parse("2006-01-02T15:04:05Z", "2023-12-20T12:13:00Z")
 }
 
 func mustGetZuluTime(s string) time.Time {
-	t, err := time.Parse("2006-01-02T15:04Z", s)
+	t, err := time.Parse("2006-01-02T15:04:05Z", s)
 	if err != nil {
 		panic(err)
 	}
@@ -211,8 +211,8 @@ func TestCreateTimestamps(t *testing.T) {
 		Time:     "08:00",
 	}
 	want := dayOneTimestamps{
-		Created:  types.DayOneDateTime(mustGetZuluTime("2023-12-17T08:00Z")),
-		Modified: types.DayOneDateTime(mustGetZuluTime("2023-12-20T12:13Z")),
+		Created:  types.DayOneDateTime(mustGetZuluTime("2023-12-17T08:00:00Z")),
+		Modified: types.DayOneDateTime(mustGetZuluTime("2023-12-20T12:13:00Z")),
 	}
 	g := mockTimestamper{}
 	got, err := createTimestamps(&entry, &g)

@@ -104,7 +104,7 @@ type DayOneDateTime time.Time
 
 func (d *DayOneDateTime) UnmarshalJSON(b []byte) error {
 	s := strings.Trim(string(b), "\"")
-	t, err := time.Parse("2006-01-02T15:04Z", s)
+	t, err := time.Parse("2006-01-02T15:04:05Z", s)
 	if err != nil {
 		return err
 	}
@@ -113,7 +113,7 @@ func (d *DayOneDateTime) UnmarshalJSON(b []byte) error {
 }
 
 func (d DayOneDateTime) MarshalJSON() ([]byte, error) {
-	return json.Marshal(d.Format("2006-01-02T15:04Z"))
+	return json.Marshal(d.Format("2006-01-02T15:04:05Z"))
 }
 
 func (d DayOneDateTime) Format(s string) string {

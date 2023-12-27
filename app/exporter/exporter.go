@@ -241,8 +241,8 @@ func generateAloneTimeScore(s string) string {
 }
 
 func createTimestamps(entry *types.DaylioEntry, g types.DayOneEntryModifiedTimestamper) (dayOneTimestamps, error) {
-	createdRaw := fmt.Sprintf("%sT%sZ", entry.FullDate, entry.Time)
-	created, err := time.Parse("2006-01-02T15:04Z", createdRaw)
+	createdRaw := fmt.Sprintf("%sT%s:00Z", entry.FullDate, entry.Time)
+	created, err := time.Parse("2006-01-02T15:04:05Z", createdRaw)
 	if err != nil {
 		return dayOneTimestamps{}, err
 	}
