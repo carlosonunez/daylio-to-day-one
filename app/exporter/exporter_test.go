@@ -290,13 +290,13 @@ func TestConvertDaylioEntriesToDayOne(t *testing.T) {
 func TestExportFileNameSinglePage(t *testing.T) {
 	today := time.Unix(1703691090, 0).UTC()
 	want := "exports/export-20231227.json"
-	got := exportFileName(1, today)
+	got := exportFileName(0, today)
 	assert.Equal(t, want, got)
 }
 
 func TestExportFileNameMultiplePage(t *testing.T) {
 	today := time.Unix(1703691090, 0).UTC()
 	want := "exports/export-20231227-2.json"
-	got := exportFileName(2, today)
+	got := exportFileName(1, today)
 	assert.Equal(t, want, got)
 }

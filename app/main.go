@@ -47,5 +47,5 @@ func main() {
 		log.Errorf("Something went wrong while writing the exports: %s", err.Error())
 		os.Exit(1)
 	}
-	log.Infof("Your Day One exports are ready. You can find them here: %s", strings.Join(fileList, ","))
+	log.Infof("Your Day One exports are ready. You can find them here: %s", strings.Join(fileList, ", "))
 }

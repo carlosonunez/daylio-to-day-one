@@ -261,8 +261,9 @@ func exportDirectory() string {
 
 func exportFileName(page int, today time.Time) string {
 	fname := fmt.Sprintf("%s-%s", BASE_FILE_NAME, today.Format("20060102"))
-	if page > 1 {
-		fname = fmt.Sprintf("%s-%d", fname, page)
+	thisPage := page + 1
+	if thisPage > 1 {
+		fname = fmt.Sprintf("%s-%d", fname, thisPage)
 	}
 	fname = fname + ".json"
 	return path.Join(exportDirectory(), fname)
