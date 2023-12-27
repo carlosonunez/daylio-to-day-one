@@ -10,4 +10,16 @@ services:
       - gocache:/root/.cache/go-build
       - gomod:/go/pkg/mod
     working_dir: /go/app/src
-    entrypoint: [ "go", "test", "-failfast", "." ]
+    entrypoint: [ "go", "test", "-failfast", "./..." ]
+  build:
+    image: golang:1.21-alpine
+    volumes:
+      - $PWD/app:/go/app/src
+      - $PWD/out:/out
+      - gocache:/root/.cache/go-build
+      - gomod:/go/pkg/mod
+    working_dir: /go/app/src
+    environment:
+      - GOOS
+      - GOARCH
+    entrypoint: [ "go", "build", "-o", "/out/exporter-$VERSION-$GOOS-$GOARCH", "main.go" ]

@@ -25,13 +25,6 @@ As much as I loved using Daylio, Day One is just better. Sorry!
 > ✅ You'll need to install Docker to use this. [Click here](https://get.docker.io)
 > to learn how or run `brew install docker` if you're on a Mac.
 
-1. Clone this repository.
-2. Export your Daylio entries as a CSV and save them to this repository's
-   directory in a file called `daylio.csv`.
-3. Run the exporter: `docker-compose run --rm export-daylio-entries`.
-   This will produce a JSON file called `dayone.json`.
-4. Import the JSON into Daylio. The entries will get imported into your default
-   journal.
 
 ## Quirks
 
