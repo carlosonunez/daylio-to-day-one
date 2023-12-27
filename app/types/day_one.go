@@ -13,7 +13,7 @@ import (
 // audio and video attachments.
 type DayOneExport struct {
 	Metadata DayOneMetadata `json:"metadata"`
-	Entries  []DayOneEntry
+	Entries  []DayOneEntry  `json:"entries"`
 }
 
 // DayOneEntry is a representation of a journal entry.
@@ -51,8 +51,8 @@ type DayOneRichTextObjectDataMetadata struct {
 }
 
 type DayOneRichTextObjectCreatedProperties struct {
-	Platform string
-	Version  int
+	Platform string `json:"platform"`
+	Version  int    `json:"version"`
 }
 
 type DayOneRichTextObject struct {
