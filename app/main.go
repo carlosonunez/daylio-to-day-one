@@ -29,7 +29,11 @@ func main() {
 		fmt.Print(USAGE)
 		os.Exit(1)
 	}
-	daylioCSVFile := os.Args[0]
+	if os.Args[1] == "-v" || os.Args[1] == "--version" {
+		exporter.Version()
+		os.Exit(0)
+	}
+	daylioCSVFile := os.Args[1]
 	if err := exporter.Initialize(); err != nil {
 		log.Errorf("Something went wrong while initializing the exporter: %s", err.Error())
 	}

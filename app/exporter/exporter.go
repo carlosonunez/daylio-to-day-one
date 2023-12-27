@@ -18,11 +18,18 @@ const (
 	DAY_ONE_MAX_ENTRIES_IN_SINGLE_EXPORT = 99
 	DEFAULT_EXPORT_DIRECTORY             = "./exports"
 	BASE_FILE_NAME                       = "export"
+	VERSION                              = "%%VER_CHANGED_BY_MAKE%%"
+	COMMIT_SHA                           = "%%SHA_CHANGED_BY_MAKE%%"
 )
 
 type dayOneTimestamps struct {
 	Created  types.DayOneDateTime
 	Modified types.DayOneDateTime
+}
+
+// Version prints this app's version
+func Version() {
+	fmt.Printf("exporter version %s, commit %s\n", VERSION, COMMIT_SHA)
 }
 
 // Initializes sets up an export job.
@@ -72,8 +79,9 @@ func ConvertToDayOneExport(daylioCSVPath string, generators types.DayOneGenerato
 // WriteDayOneExports commits a list of DayOneExports to disk.
 func WriteDayOneExports(exportList []*types.DayOneExport) ([]string, error) {
 	exportFnames := []string{}
+	today := time.Now()
 	for page, export := range exportList {
-		fname := exportFileName(page)
+		fname := exportFileName(page, today)
 		f, err := os.Create(fname)
 		if err != nil {
 			return []string{}, err
@@ -250,11 +258,10 @@ func exportDirectory() string {
 	return DEFAULT_EXPORT_DIRECTORY
 }
 
-func exportFileName(page int) string {
-	today := time.Now().Format("20060102")
-	fname := BASE_FILE_NAME
+func exportFileName(page int, today time.Time) string {
+	fname := fmt.Sprintf("%s-%s", BASE_FILE_NAME, today.Format("20060102"))
 	if page > 1 {
-		fname = fmt.Sprintf("%s-%s-%d", fname, today, page)
+		fname = fmt.Sprintf("%s-%d", fname, page)
 	}
 	fname = fname + ".json"
 	return path.Join(exportDirectory(), fname)
