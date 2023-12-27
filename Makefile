@@ -14,6 +14,8 @@ clean:
 
 build: clean
 build:
+	sha=$$(git rev-parse --short HEAD); \
+	COMMIT_SHA="$$sha" VERSION=$(VERSION) $(DOCKER_COMPOSE) run --rm copy-source || exit 1; \
 	mkdir $(PWD)/out; \
 	for arch in $(ARCHS); \
 	do \
@@ -25,4 +27,4 @@ build:
 	done
 
 test:
-	$(DOCKER_COMPOSE) run --rm test
+	$(DOCKER_COMPOSE) run --rm unit-tests
