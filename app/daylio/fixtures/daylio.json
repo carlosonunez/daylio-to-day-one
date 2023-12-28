@@ -1,0 +1,49 @@
+{
+  "tags": [
+    {
+      "id": 1,
+      "name": "activity 1"
+    },
+    {
+      "id": 2,
+      "name": "activity 2"
+    },
+    {
+      "id": 3,
+      "name": "activity 3"
+    }
+  ],
+  "dayEntries": [
+    {
+      "note": "note text 1",
+      "note_title": "note title",
+      "datetime": 1702800000,
+      "mood": 1,
+      "tags": [
+        1,
+        2,
+        3
+      ]
+    },
+    {
+      "note": "note text 2",
+      "note_title": "",
+      "datetime": 1702713600,
+      "mood": 2,
+      "tags": [
+        1,
+        2,
+        3
+      ]
+    },
+    {
+      "note": "note text 3",
+      "note_title": "",
+      "datetime": 1702627200,
+      "mood": 3,
+      "tags": [
+        1
+      ]
+    }
+  ]
+}

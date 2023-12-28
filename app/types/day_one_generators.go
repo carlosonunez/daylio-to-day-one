@@ -10,18 +10,18 @@ import (
 // DayOneEntryUUIDGenerator produces Day One richText UUIDs.
 type DayOneEntryUUIDGenerator interface {
 	// GenerateUUID makes the UUID
-	GenerateUUID(entry *DaylioEntry) (uuid.UUID, error)
+	GenerateUUID() (uuid.UUID, error)
 }
 
 // DayOneIDGenerator generates a Day One entry ID. It needs to be 33 chars long.
 type DayOneIDGenerator interface {
 	// GenerateID creates an ID.
-	CreateID(entry *DaylioEntry) string
+	CreateID() string
 }
 
 // Timestamper produces modifiedOn timestamps
 type DayOneEntryModifiedTimestamper interface {
-	CreateModifiedTime(entry *DaylioEntry) (time.Time, error)
+	CreateModifiedTime() (time.Time, error)
 }
 
 // DayOneGenerators is used to store references to ID and timestamp generators
@@ -34,19 +34,19 @@ type DayOneGenerators struct {
 
 type DefaultDayOneEntryUUIDGenerator struct{}
 
-func (g *DefaultDayOneEntryUUIDGenerator) GenerateUUID(entry *DaylioEntry) (uuid.UUID, error) {
+func (g *DefaultDayOneEntryUUIDGenerator) GenerateUUID() (uuid.UUID, error) {
 	return uuid.New(), nil
 }
 
 type DefaultDayOneIDGenerator struct{}
 
-func (g *DefaultDayOneIDGenerator) CreateID(entry *DaylioEntry) string {
+func (g *DefaultDayOneIDGenerator) CreateID() string {
 	return strings.ReplaceAll(uuid.New().String(), "-", "")
 }
 
 type DefaultDayOneEntryModifiedTimestamper struct{}
 
-func (g *DefaultDayOneEntryModifiedTimestamper) CreateModifiedTime(entry *DaylioEntry) (time.Time, error) {
+func (g *DefaultDayOneEntryModifiedTimestamper) CreateModifiedTime() (time.Time, error) {
 	return time.Now(), nil
 }
 

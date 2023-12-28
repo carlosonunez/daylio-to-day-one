@@ -1,11 +1,7 @@
 # Daylio to Day One
 
-This is a tool that helps you export the text from your Daylio entries into a
-DayOne-compatible format from a provided CSV.
-
-> ⚠️  Audio and video captured in Daylio is not supported. I recommend backing
-> that up to Dropbox, as they are not easily discoverable within iCloud and
-> Daylio only works on iOS devices.
+This is a tool that migrates your Daylio entries to Day One from an iCloud
+or Dropbox backup.
 
 ## Motivation
 
@@ -22,8 +18,27 @@ As much as I loved using Daylio, Day One is just better. Sorry!
 
 ## How To Use
 
-> ✅ You'll need to install Docker to use this. [Click here](https://get.docker.io)
-> to learn how or run `brew install docker` if you're on a Mac.
+From a terminal, run the install script:
+
+```sh
+curl -sS
+https://raw.githubusercontent.com/carlosonunez/daylio-to-day-one/main/scripts/install.sh
+| bash
+```
+
+and go!
+
+```sh
+daylio-to-day-one
+```
+
+This will automatically try to find your Daylio backup from a few known
+locations. If that doesn't work, you can also provide the path to a backup file
+like this:
+
+```sh
+daylio-to-day-one [PATH_TO_BACKUP]
+```
 
 
 ## Quirks

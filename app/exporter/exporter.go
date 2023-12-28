@@ -3,15 +3,14 @@ package exporter
 import (
 	"archive/zip"
 	"encoding/json"
+	"exporter/daylio"
 	"exporter/types"
 	"fmt"
 	"io"
 	"os"
 	"path/filepath"
-	"strings"
 	"time"
 
-	csv "github.com/gocarina/gocsv"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -44,19 +43,25 @@ func Initialize() error {
 	return nil
 }
 
-// ConvertToDayOneExport converts entries within an exported CSV file from
-// Daylio into a list of DayOne-compatible JSON import files.
-//
-// Each Day One export file contains at most 99 entries, as this seems to be the
-// most entries Day One will process at a time.
-func ConvertToDayOneExport(daylioCSVPath string, generators types.DayOneGenerators) (*types.DayOneExport, error) {
-	f, err := os.OpenFile(daylioCSVPath, os.O_RDWR|os.O_CREATE, os.ModePerm)
+// ConvertToDayOneExportFromBackup converts entries within a Daylio backup file
+// into a list of DayOne-compatible JSON import files.
+func ConvertToDayOneExportFromDaylioBackup(providedFile string, generators types.DayOneGenerators) (*types.DayOneExport, error) {
+	entries, err := daylio.GetEntriesFromBackupFile(providedFile)
 	if err != nil {
 		return nil, err
 	}
-	defer f.Close()
-	var entries []types.DaylioEntry
-	if err := csv.UnmarshalFile(f, &entries); err != nil {
+	dayOneEntries, err := convertToDayOneEntries(entries, generators)
+	if err != nil {
+		return nil, err
+	}
+	return types.NewDayOneExport(dayOneEntries), nil
+}
+
+// ConvertToDayOneExportFromDaylioCSV converts entries within an exported CSV file from
+// Daylio into a list of DayOne-compatible JSON import files.
+func ConvertToDayOneExportFromDaylioCSV(daylioCSVPath string, generators types.DayOneGenerators) (*types.DayOneExport, error) {
+	entries, err := daylio.GetEntriesFromCSVFile(daylioCSVPath)
+	if err != nil {
 		return nil, err
 	}
 	dayOneEntries, err := convertToDayOneEntries(entries, generators)
@@ -98,7 +103,7 @@ func writeDayOneExport(buf io.Writer, export *types.DayOneExport) error {
 	return err
 }
 
-func numEntriesInThisPage(entries []types.DaylioEntry, idx int) int {
+func numEntriesInThisPage(entries []daylio.Entry, idx int) int {
 	if len(entries) <= DAY_ONE_MAX_ENTRIES_IN_SINGLE_EXPORT {
 		return len(entries) - 1
 	}
@@ -109,12 +114,12 @@ func numEntriesInThisPage(entries []types.DaylioEntry, idx int) int {
 	return numEntries
 }
 
-func convertToDayOneEntries(entries []types.DaylioEntry, generators types.DayOneGenerators) ([]types.DayOneEntry, error) {
+func convertToDayOneEntries(entries []daylio.Entry, generators types.DayOneGenerators) ([]types.DayOneEntry, error) {
 	outs := []types.DayOneEntry{}
 	for idx := 0; idx < len(entries); idx++ {
 		daylioEntry := entries[idx]
 		dayOneEntry := types.NewEmptyDayOneEntry()
-		id := generators.IDGenerator.CreateID(&daylioEntry)
+		id := generators.IDGenerator.CreateID()
 		rt, err := generateDayOneRichText(&daylioEntry, generators.UUIDGenerator)
 		if err != nil {
 			return nil, err
@@ -143,7 +148,7 @@ func convertToDayOneEntries(entries []types.DaylioEntry, generators types.DayOne
 	return outs, nil
 }
 
-func createDayOneText(entry *types.DaylioEntry) string {
+func createDayOneText(entry *daylio.Entry) string {
 	noteParts := make([]string, 2)
 	if entry.NoteTitle != "" {
 		noteParts[0] = entry.NoteTitle
@@ -154,8 +159,8 @@ func createDayOneText(entry *types.DaylioEntry) string {
 	return fmt.Sprintf("%s\n\n%s", noteParts[0], noteParts[1])
 }
 
-func generateDayOneRichText(entry *types.DaylioEntry, gen types.DayOneEntryUUIDGenerator) (string, error) {
-	uuid, err := gen.GenerateUUID(entry)
+func generateDayOneRichText(entry *daylio.Entry, gen types.DayOneEntryUUIDGenerator) (string, error) {
+	uuid, err := gen.GenerateUUID()
 	if err != nil {
 		return "", err
 	}
@@ -187,19 +192,7 @@ func generateDayOneRichText(entry *types.DaylioEntry, gen types.DayOneEntryUUIDG
 	return string(out), nil
 }
 
-func generateTagsFromDaylioActivities(entry *types.DaylioEntry) ([]string, error) {
-	var out []string
-	for _, activityRaw := range strings.Split(entry.Activities, "|") {
-		activity := strings.Trim(activityRaw, " ")
-		if aloneScore := generateAloneTimeScore(activity); aloneScore != "" {
-			activity = aloneScore
-		}
-		out = append(out, activity)
-	}
-	return out, nil
-}
-
-func generateLocationFromDaylioActivities(entry *types.DaylioEntry) (types.DayOneEntryLocation, error) {
+func generateLocationFromDaylioActivities(entry *daylio.Entry) (types.DayOneEntryLocation, error) {
 	if os.Getenv("NO_AUTO_HOME_LOCATION") != "" {
 		return types.DayOneEntryLocation{}, nil
 	}
@@ -214,31 +207,13 @@ func generateLocationFromDaylioActivities(entry *types.DaylioEntry) (types.DayOn
 
 }
 
-func generateAloneTimeScore(s string) string {
-	if os.Getenv("NO_ALONE_TIME_SCORING") != "" {
-		return ""
-	}
-	var score int
-	switch strings.ToLower(s) {
-	case "no":
-		score = 0
-	case "a little bit":
-		score = 1
-	case "yes!":
-		score = 2
-	default:
-		return ""
-	}
-	return fmt.Sprintf("alone score: %d", score)
-}
-
-func createTimestamps(entry *types.DaylioEntry, g types.DayOneEntryModifiedTimestamper) (dayOneTimestamps, error) {
+func createTimestamps(entry *daylio.Entry, g types.DayOneEntryModifiedTimestamper) (dayOneTimestamps, error) {
 	createdRaw := fmt.Sprintf("%sT%s:00Z", entry.FullDate, entry.Time)
 	created, err := time.Parse("2006-01-02T15:04:05Z", createdRaw)
 	if err != nil {
 		return dayOneTimestamps{}, err
 	}
-	modified, err := g.CreateModifiedTime(entry)
+	modified, err := g.CreateModifiedTime()
 	if err != nil {
 		return dayOneTimestamps{}, err
 	}
