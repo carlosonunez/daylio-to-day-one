@@ -9,6 +9,12 @@ import (
 	"github.com/google/uuid"
 )
 
+// DayOneExportResult provides details about the export.
+type DayOneExportResult struct {
+	ZipFile     string
+	JournalName string
+}
+
 // DayOneExport represents an export of a Day One journal (with entries) sans
 // audio and video attachments.
 type DayOneExport struct {

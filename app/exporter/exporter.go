@@ -16,6 +16,7 @@ import (
 )
 
 const (
+	DEFAULT_DESTINATION_JOURNAL          = "From Daylio"
 	DAY_ONE_MAX_ENTRIES_IN_SINGLE_EXPORT = 99
 	DEFAULT_EXPORT_DIRECTORY             = "./exports"
 	BASE_FILE_NAME                       = "export"
@@ -66,22 +67,26 @@ func ConvertToDayOneExport(daylioCSVPath string, generators types.DayOneGenerato
 }
 
 // WriteDayOneExports zips a DayOne export JSON and writes it to disk.
-func WriteDayOneExports(export *types.DayOneExport, journalName string) (string, error) {
-	f, err := os.Create(exportZipFileName())
+func WriteDayOneExports(export *types.DayOneExport) (*types.DayOneExportResult, error) {
+	r := types.DayOneExportResult{
+		ZipFile:     exportZipFileName(),
+		JournalName: exportDayOneJournalName(),
+	}
+	f, err := os.Create(r.ZipFile)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 	defer f.Close()
 	zip := zip.NewWriter(f)
 	defer zip.Close()
-	fInZip, err := zip.Create(journalName + ".zip")
+	fInZip, err := zip.Create(r.JournalName + ".json")
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 	if err := writeDayOneExport(fInZip, export); err != nil {
-		return "", err
+		return nil, err
 	}
-	return exportZipFileName(), nil
+	return &r, nil
 }
 
 func writeDayOneExport(buf io.Writer, export *types.DayOneExport) error {
@@ -245,6 +250,10 @@ func createTimestamps(entry *types.DaylioEntry, g types.DayOneEntryModifiedTimes
 
 func exportDirectory() string {
 	return DEFAULT_EXPORT_DIRECTORY
+}
+
+func exportDayOneJournalName() string {
+	return DEFAULT_DESTINATION_JOURNAL
 }
 
 func exportZipFileName() string {
