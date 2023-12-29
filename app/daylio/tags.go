@@ -4,20 +4,24 @@ import (
 	"fmt"
 	"os"
 	"strings"
+
+	log "github.com/sirupsen/logrus"
 )
 
 // we're assuming that no Daylio entries have tag IDs that aren't in the backup.
 func exportTagsFromIDs(ids []int, tags []Tag) ([]string, error) {
 	tagNames := []string{}
-	tagHT := map[int]int{}
-	for _, id := range ids {
-		tagHT[id] = 0
-	}
+	tagHT := map[int]string{}
 	for _, tag := range tags {
-		if _, ok := tagHT[tag.ID]; !ok {
-			return []string{}, fmt.Errorf("tag ID not in Daylio backup: %d", tag.ID)
+		tagHT[tag.ID] = tag.Name
+	}
+	log.Tracef("tags: %+v", tagHT)
+	for _, id := range ids {
+		log.Tracef("looking for tag id: '%d'", id)
+		tagName, ok := tagHT[id]
+		if !ok {
+			return []string{}, fmt.Errorf("tag ID not in Daylio backup: %d", id)
 		}
-		tagName := tag.Name
 		if score := generateAloneTimeScore(tagName); score != "" {
 			tagName = score
 		}

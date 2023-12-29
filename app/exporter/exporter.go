@@ -46,10 +46,12 @@ func Initialize() error {
 // ConvertToDayOneExportFromBackup converts entries within a Daylio backup file
 // into a list of DayOne-compatible JSON import files.
 func ConvertToDayOneExportFromDaylioBackup(providedFile string, generators types.DayOneGenerators) (*types.DayOneExport, error) {
+	log.Debug("Starting conversion from backup file")
 	entries, err := daylio.GetEntriesFromBackupFile(providedFile)
 	if err != nil {
 		return nil, err
 	}
+	log.Infof("Exporting %d Daylio entries; this might take a few moments", len(entries))
 	dayOneEntries, err := convertToDayOneEntries(entries, generators)
 	if err != nil {
 		return nil, err
@@ -124,10 +126,6 @@ func convertToDayOneEntries(entries []daylio.Entry, generators types.DayOneGener
 		if err != nil {
 			return nil, err
 		}
-		tags, err := generateTagsFromDaylioActivities(&daylioEntry)
-		if err != nil {
-			return nil, err
-		}
 		loc, err := generateLocationFromDaylioActivities(&daylioEntry)
 		if err != nil {
 			return nil, err
@@ -138,7 +136,7 @@ func convertToDayOneEntries(entries []daylio.Entry, generators types.DayOneGener
 		}
 		dayOneEntry.RichText = rt
 		dayOneEntry.UUID = id
-		dayOneEntry.Tags = tags
+		dayOneEntry.Tags = daylioEntry.ActivitiesList
 		dayOneEntry.Location = loc
 		dayOneEntry.CreationDate = ts.Created
 		dayOneEntry.ModifiedDate = ts.Modified

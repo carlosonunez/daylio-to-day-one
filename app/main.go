@@ -3,7 +3,6 @@ package main
 import (
 	"exporter/exporter"
 	"exporter/types"
-	"fmt"
 	"os"
 	"path"
 	"path/filepath"
@@ -13,11 +12,25 @@ import (
 
 const (
 	USAGE = `Usage: daylio-to-day-one [FILE]
-Exports entries in a Daylio CSV to a Day One JSON ZIP file.
+Exports entries in a Daylio backup file to a Day One JSON ZIP file.
 
 OPTIONS
 
-	FILE			The path to the Daylio export.
+	FILE			The path to the Daylio backup file. Optional if
+						iCloud Backup is enabled within Daylio.
+
+GENERATING DAYLIO EXPORT FILES
+
+Do the following to generate a Daylio backup file and provide it to the Daylio to Day One Exporter:
+
+  * Open Daylio,
+  * Tap the "(...) More" button on the far right,
+  * Tap "Backup & Restore"
+  * Tap "Advanced Options"
+  * Tap "Export". Save the file somewhere convenient, like
+	* "Downloads/daylio.backup"
+	* Copy this file to the computer running this program.
+	* Provide the backup file to Exporter:  "daylio-to-day-one Downloads/daylio.backup"
 `
 )
 
@@ -40,19 +53,18 @@ or move them into your desired journal.
 }
 
 func main() {
-	if len(os.Args) <= 1 {
-		fmt.Print(USAGE)
-		os.Exit(1)
-	}
-	if os.Args[1] == "-v" || os.Args[1] == "--version" {
+	if len(os.Args) > 1 && (os.Args[1] == "-v" || os.Args[1] == "--version") {
 		exporter.Version()
 		os.Exit(0)
 	}
-	daylioCSVFile := os.Args[1]
 	if err := exporter.Initialize(); err != nil {
 		log.Errorf("Something went wrong while initializing the exporter: %s", err.Error())
 	}
-	dayOneExports, err := exporter.ConvertToDayOneExport(daylioCSVFile, types.DefaultDayOneGenerators())
+	providedBackupFile := ""
+	if len(os.Args) == 2 {
+		providedBackupFile = os.Args[1]
+	}
+	dayOneExports, err := exporter.ConvertToDayOneExportFromDaylioBackup(providedBackupFile, types.DefaultDayOneGenerators())
 	if err != nil {
 		log.Errorf("Something went wrong while performing the export: %s", err.Error())
 		os.Exit(1)

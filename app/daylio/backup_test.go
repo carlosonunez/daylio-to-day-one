@@ -168,7 +168,7 @@ func TestReadingBackupJSON(t *testing.T) {
 			},
 		},
 	}
-	got, err := backupFromJSON(json)
+	got, err := parseBackupJSON(json)
 	assert.NoError(t, err)
 	assert.Equal(t, &want, got)
 }

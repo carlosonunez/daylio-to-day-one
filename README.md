@@ -18,26 +18,17 @@ As much as I loved using Daylio, Day One is just better. Sorry!
 
 ## How To Use
 
-From a terminal, run the install script:
+1. [Download](https://github.com/carlosonunez/daylio-to-day-one/releases) the
+   latest release for your platform
 
-```sh
-curl -sS
-https://raw.githubusercontent.com/carlosonunez/daylio-to-day-one/main/scripts/install.sh
-| bash
-```
-
-and go!
-
-```sh
-daylio-to-day-one
-```
+2. Run it! `./exporter-$VERSION-$OS-$ARCH`
 
 This will automatically try to find your Daylio backup from a few known
 locations. If that doesn't work, you can also provide the path to a backup file
 like this:
 
 ```sh
-daylio-to-day-one [PATH_TO_BACKUP]
+./exporter-$VERSION-$OS-$ARCH [PATH_TO_BACKUP]
 ```
 
 

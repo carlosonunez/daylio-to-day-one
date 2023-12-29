@@ -9,6 +9,7 @@ import (
 	"io/fs"
 	"os"
 	"path/filepath"
+	"runtime"
 	"sort"
 	"strings"
 	"time"
@@ -35,7 +36,7 @@ type BackupFileTraverser interface {
 type defaultBFT struct{}
 
 func (t *defaultBFT) Dir() string {
-	return filepath.Join(os.Getenv("HOME"), "Library", "MobileDocuments", "com~apple~CloudDocs", "Downloads")
+	return filepath.Join(os.Getenv("HOME"), "Library", "Mobile Documents", "com~apple~CloudDocs", "Downloads")
 }
 
 func (t *defaultBFT) ListBackups() ([]fs.DirEntry, error) {
@@ -58,19 +59,15 @@ func (t *defaultBFT) ListBackups() ([]fs.DirEntry, error) {
 func GetEntriesFromBackupFile(providedFile string) ([]Entry, error) {
 	var fpath string
 	var err error
-	if providedFile == "" {
-		fpath, err = resolveDaylioBackupLocationMacOS(&defaultBFT{})
-		if err != nil {
-			return nil, err
-		}
-	} else {
-		fpath = providedFile
+	fpath, err = resolveDaylioBackupLocation(providedFile)
+	if err != nil {
+		return nil, err
 	}
 	json, err := extractJSONFromDaylioBackupFile(fpath)
 	if err != nil {
 		return nil, err
 	}
-	backup, err := backupFromJSON(json)
+	backup, err := parseBackupJSON(json)
 	if err != nil {
 		return nil, err
 	}
@@ -79,6 +76,18 @@ func GetEntriesFromBackupFile(providedFile string) ([]Entry, error) {
 		return nil, err
 	}
 	return entries, nil
+}
+
+func resolveDaylioBackupLocation(providedFile string) (string, error) {
+	if len(providedFile) > 0 {
+		return providedFile, nil
+	}
+	switch runtime.GOOS {
+	case "darwin":
+		return resolveDaylioBackupLocationMacOS(&defaultBFT{})
+	default:
+		return "", fmt.Errorf("This operating system type does not support finding Daylio backups automatically. Provide a path to a Daylio backup and try again.")
+	}
 }
 
 func simpleEntriesFromBackup(b *Backup) ([]Entry, error) {
@@ -132,7 +141,7 @@ func getEncodedDaylioJSON(f *zip.File) ([]byte, error) {
 	return encJSON, nil
 }
 
-func backupFromJSON(b []byte) (*Backup, error) {
+func parseBackupJSON(b []byte) (*Backup, error) {
 	var backup Backup
 	if err := json.Unmarshal(b, &backup); err != nil {
 		return nil, err
@@ -163,6 +172,7 @@ func resolveDaylioBackupLocationMacOS(t BackupFileTraverser) (string, error) {
 }
 
 func dayEntryToEntry(d *DayEntry, tags []Tag) (*Entry, error) {
+	log.Tracef("Simplifying Daylio day entry '%+v'", d)
 	activities, err := exportTagsFromIDs(d.TagIDs, tags)
 	if err != nil {
 		return nil, err
@@ -171,23 +181,25 @@ func dayEntryToEntry(d *DayEntry, tags []Tag) (*Entry, error) {
 	if err != nil {
 		return nil, err
 	}
-	eTime := time.Unix(d.TimeUNIX, 0).UTC()
-	return &Entry{
+	eTime := time.UnixMilli(d.TimeUNIX).UTC()
+	entry := Entry{
 		FullDate:       eTime.Format("2006-01-02"),
 		Date:           eTime.Format("Jan 02"),
 		Weekday:        eTime.Format("Monday"),
 		Time:           eTime.Format("15:04"),
 		Mood:           mood,
-		ActivitiesList: activities,
+		ActivitiesList: append(activities, mood),
 		NoteTitle:      d.Title,
 		Note:           d.Note,
-	}, nil
+	}
+	log.Tracef("generated entry: %+v", entry)
+	return &entry, nil
 }
 
 func resolveMood(mID int) (string, error) {
 	mName, ok := DaylioMoodIDs[mID]
 	if ok {
-		return mName, nil
+		return fmt.Sprintf("mood: %s", mName), nil
 	}
 	return "", fmt.Errorf("Not a valid Daylio mood ID: %d", mID)
 }
