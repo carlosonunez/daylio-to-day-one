@@ -4,18 +4,18 @@ on:
   push:
     tags:
       - 'v*'
-  jobs:
-    build:
-      runs-on: ubuntu-latest
-      permissions:
-        content: write
-      steps:
-        - name: Checkout
-          uses: actions/checkout@3
-        - name: Install Docker Compose
-          uses: KengoTODA/actions-setup-docker-compose@main
-        - name: Build
-          run: make build
-        - uses: ncipollo/release-action@v1
-          with:
-            artifacts: "out/exporter-*"
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      content: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3
+      - name: Install Docker Compose
+        uses: KengoTODA/actions-setup-docker-compose@main
+      - name: Build
+        run: make build
+      - uses: ncipollo/release-action@v1
+        with:
+          artifacts: "out/exporter-*"
