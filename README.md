@@ -54,8 +54,6 @@ page.
 src="https://github.com/carlosonunez/daylio-to-day-one/raw/main/static/daylio-1.png" 
 width=40%>
 
-![](./static/daylio-1.png)
-
 Once there, tap on **Advanced Options**
 
 <img
@@ -65,5 +63,5 @@ width=40%>
 Finally, tap on the big "Export" button and save the created file somewhere
 convenient (like the Downloads directory).
 
-<img src="https://github.com/carlosonunez/daylio-to-day-one/raw/main/static/daylio-23png" 
+<img src="https://github.com/carlosonunez/daylio-to-day-one/raw/main/static/daylio-3png" 
 width=40%>
