@@ -9,6 +9,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	log "github.com/sirupsen/logrus"
@@ -126,7 +127,11 @@ func convertToDayOneEntries(entries []daylio.Entry, generators types.DayOneGener
 		if err != nil {
 			return nil, err
 		}
-		loc, err := generateLocationFromDaylioActivities(&daylioEntry)
+		activities := daylioEntry.ActivitiesList
+		if len(activities) == 0 {
+			activities = strings.Split(strings.ReplaceAll(daylioEntry.Activities, " | ", "|"), "|")
+		}
+		loc, err := generateLocationFromDaylioActivities(activities)
 		if err != nil {
 			return nil, err
 		}
@@ -136,7 +141,7 @@ func convertToDayOneEntries(entries []daylio.Entry, generators types.DayOneGener
 		}
 		dayOneEntry.RichText = rt
 		dayOneEntry.UUID = id
-		dayOneEntry.Tags = daylioEntry.ActivitiesList
+		dayOneEntry.Tags = activities
 		dayOneEntry.Location = loc
 		dayOneEntry.CreationDate = ts.Created
 		dayOneEntry.ModifiedDate = ts.Modified
@@ -190,7 +195,7 @@ func generateDayOneRichText(entry *daylio.Entry, gen types.DayOneEntryUUIDGenera
 	return string(out), nil
 }
 
-func generateLocationFromDaylioActivities(entry *daylio.Entry) (types.DayOneEntryLocation, error) {
+func generateLocationFromDaylioActivities(activities []string) (types.DayOneEntryLocation, error) {
 	if os.Getenv("NO_AUTO_HOME_LOCATION") != "" {
 		return types.DayOneEntryLocation{}, nil
 	}
@@ -201,7 +206,12 @@ func generateLocationFromDaylioActivities(entry *daylio.Entry) (types.DayOneEntr
 	if err := json.Unmarshal([]byte(os.Getenv("HOME_ADDRESS_JSON")), &out); err != nil {
 		return types.DayOneEntryLocation{}, err
 	}
-	return out, nil
+	for _, activity := range activities {
+		if activity == "home" {
+			return out, nil
+		}
+	}
+	return types.DayOneEntryLocation{}, nil
 
 }
 

@@ -210,7 +210,7 @@ func TestExportLocationQuirk(t *testing.T) {
 	var want types.DayOneEntryLocation
 	err = json.Unmarshal(locJSON, &want)
 	require.NoError(t, err)
-	got, err := exportLocationFromResolvedDaylioTags([]string{
+	got, err := generateLocationFromDaylioActivities([]string{
 		"activity 1",
 		"home",
 		"activity 2",

@@ -188,7 +188,7 @@ func dayEntryToEntry(d *DayEntry, tags []Tag) (*Entry, error) {
 		Weekday:        eTime.Format("Monday"),
 		Time:           eTime.Format("15:04"),
 		Mood:           mood,
-		ActivitiesList: append(activities, mood),
+		ActivitiesList: append(activities, fmt.Sprintf("mood: %s", mood)),
 		NoteTitle:      d.Title,
 		Note:           d.Note,
 	}
@@ -199,7 +199,7 @@ func dayEntryToEntry(d *DayEntry, tags []Tag) (*Entry, error) {
 func resolveMood(mID int) (string, error) {
 	mName, ok := DaylioMoodIDs[mID]
 	if ok {
-		return fmt.Sprintf("mood: %s", mName), nil
+		return mName, nil
 	}
 	return "", fmt.Errorf("Not a valid Daylio mood ID: %d", mID)
 }

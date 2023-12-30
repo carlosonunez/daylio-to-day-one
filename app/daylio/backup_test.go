@@ -187,7 +187,7 @@ func TestDayEntryToSimpleEntry(t *testing.T) {
 	entry := DayEntry{
 		Note:     "note text 1",
 		Title:    "note title",
-		TimeUNIX: 1702800000,
+		TimeUNIX: 1702800000000,
 		TagIDs:   []int{1, 2, 3},
 		Mood:     1,
 	}
@@ -202,7 +202,7 @@ func TestDayEntryToSimpleEntry(t *testing.T) {
 		Weekday:        "Sunday",
 		Time:           "08:00",
 		Mood:           "rad",
-		ActivitiesList: []string{"activity 1", "activity 2", "activity 3"},
+		ActivitiesList: []string{"activity 1", "activity 2", "activity 3", "mood: rad"},
 		NoteTitle:      "note title",
 		Note:           "note text 1",
 	}
