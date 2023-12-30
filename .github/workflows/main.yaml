@@ -12,8 +12,15 @@ jobs:
         uses: actions/checkout@v3
       - name: Install Docker Compose
         uses: KengoTODA/actions-setup-docker-compose@main
+        env:
+          GITHUB_TOKEN: "${{ secrets.github_token }}"
       - name: Build
         run: make build
-      - uses: ncipollo/release-action@v1
+      - name: Test
+        run: make test
+      - name: Release binaries
+        uses: ncipollo/release-action@v1
         with:
           artifacts: "out/exporter-*"
+        env:
+          GITHUB_TOKEN: "${{ secrets.github_token }}"
