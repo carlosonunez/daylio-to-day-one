@@ -50,13 +50,20 @@ Creating a Daylio backup is very easy.
 First, tap on the **(...) More** tab then on "Backup and Restore" later in the
 page.
 
+<img
+src="https://github.com/carlosonunez/daylio-to-day-one/raw/main/static/daylio-1.png" 
+width=40%>
+
 ![](./static/daylio-1.png)
 
 Once there, tap on **Advanced Options**
 
-![](./static/daylio-2.png)
+<img
+src="https://github.com/carlosonunez/daylio-to-day-one/raw/main/static/daylio-2.png" 
+width=40%>
 
 Finally, tap on the big "Export" button and save the created file somewhere
 convenient (like the Downloads directory).
 
-![](./static/daylio-3.png)
+<img src="https://github.com/carlosonunez/daylio-to-day-one/raw/main/static/daylio-23png" 
+width=40%>
