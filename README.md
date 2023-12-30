@@ -18,19 +18,17 @@ As much as I loved using Daylio, Day One is just better. Sorry!
 
 ## How To Use
 
+1. [Create a backup](#creating-a-daylio-backup) of your Daylio data.
+
+   If you're using Daylio on an iPhone with iCloud enabled, save the file to
+   your "Downloads" directory to have the exporter automatically find it.
+
 1. [Download](https://github.com/carlosonunez/daylio-to-day-one/releases) the
-   latest release for your platform
+   latest release for your platform.
 
-2. Run it! `./exporter-$VERSION-$OS-$ARCH`
-
-This will automatically try to find your Daylio backup from a few known
-locations. If that doesn't work, you can also provide the path to a backup file
-like this:
-
-```sh
-./exporter-$VERSION-$OS-$ARCH [PATH_TO_BACKUP]
-```
-
+2. Run it! `./exporter-$VERSION-$OS-$ARCH` or
+   `./exporter-$VERSION-$OS-$ARCH [PATH_TO_BACKUP]` if you are not using iCloud
+   or saved the file outside of the "Downloads" directory.
 
 ## Quirks
 
@@ -44,3 +42,21 @@ the flags to take effect.
 | :----                                                                                      | :------                   |
 | Set Home Location when "Home" Activity detected and `HOME_ADDRESS_JSON` detected in dotenv | `NO_AUTO_HOME_LOCATION`   |
 | Score alone time when "No", "A Little Bit", and "Yes" activities detected                  | `NO_ALONE_TIME_SCORING`   |
+
+## Creating a Daylio Backup
+
+Creating a Daylio backup is very easy.
+
+First, tap on the **(...) More** tab then on "Backup and Restore" later in the
+page.
+
+![](./static/daylio-1.png)
+
+Once there, tap on **Advanced Options**
+
+![](./static/daylio-2.png)
+
+Finally, tap on the big "Export" button and save the created file somewhere
+convenient (like the Downloads directory).
+
+![](./static/daylio-3.png)
